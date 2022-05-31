@@ -20,6 +20,12 @@ var UserSchema = new mongoose.Schema({
         unique: true,
     },
 
+    role: {
+        type: String,
+        enum: ['admin', 'user'],
+        default: 'user'
+    },
+
     password: {
         type: String,
         required: [true, 'Please provide password'],
@@ -28,7 +34,7 @@ var UserSchema = new mongoose.Schema({
 
     balance : {
         type: Number,
-        default: 0,
+        default: 10000,
     },
     // add transaction history here
 })
