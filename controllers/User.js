@@ -12,7 +12,7 @@ var createAccount = async (req, res) => {
     if (exist) throw new BadRequestError("account already exists")
 
     let role = 'user'
-    if(await User.find({}) === 0) role = admin
+    if (await User.countDocuments({}) === 0) role = 'admin'
     const user = await User.create({ name, email, password, role}) // name email password
     const JWT = user.createJWT();
     res.status(StatusCodes.OK).json({token: JWT, id: user._id}) // id name

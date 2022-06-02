@@ -43,7 +43,7 @@ const deposit = async (req, res) => {
 
     await Transaction.create({ from: id, to: id, amount: amount });
 
-    res.status(StatusCodes.OK).json({ bal: user.balance })
+    res.status(StatusCodes.OK).json({ bal: newBal })
 }
 
 const withdraw = async (req, res) => {
@@ -63,7 +63,7 @@ const withdraw = async (req, res) => {
 
     await Transaction.create({ from: id, to: id, amount: -amount });
 
-    res.status(StatusCodes.OK).json({ bal: user.balance })
+    res.status(StatusCodes.OK).json({ bal: newBal})
 
 }
 
