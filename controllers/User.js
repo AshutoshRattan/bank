@@ -3,7 +3,17 @@ const { StatusCodes, OK } = require('http-status-codes')
 const { BadRequestError, UnauthenticatedError } = require('../errors')
 
 var createAccount = async (req, res) => {
-    const user = await User.create({ ...req.body }) // name email password
+    const {name, email, password} = req.body
+    if (!email || !password || !name) {
+        throw new BadRequestError('please provide email, password, name')
+    }
+    
+    const exist = await User.findOne({email: email}) 
+    if (exist) throw new BadRequestError("account already exists")
+
+    let role = 'user'
+    if (await User.countDocuments({}) === 0) role = 'admin'
+    const user = await User.create({ name, email, password, role}) // name email password
     const JWT = user.createJWT();
     res.status(StatusCodes.OK).json({token: JWT, id: user._id}) // id name
 }

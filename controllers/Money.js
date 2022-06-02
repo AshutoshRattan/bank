@@ -43,7 +43,7 @@ const deposit = async (req, res) => {
 
     await Transaction.create({ from: id, to: id, amount: amount });
 
-    res.status(StatusCodes.OK).json({ bal: user.balance })
+    res.status(StatusCodes.OK).json({ bal: newBal })
 }
 
 const withdraw = async (req, res) => {
@@ -63,8 +63,15 @@ const withdraw = async (req, res) => {
 
     await Transaction.create({ from: id, to: id, amount: -amount });
 
-    res.status(StatusCodes.OK).json({ bal: user.balance })
+    res.status(StatusCodes.OK).json({ bal: newBal})
 
+}
+
+const balance = async (req, res) => {
+    const id = req.user.userId
+    const user = await User.findById(id)
+    const bal = user.balance
+    res.status(StatusCodes.OK).json({bal: bal})
 }
 
 const TransactionHistory = async (req, res) => {
@@ -85,4 +92,4 @@ const TransactionHistory = async (req, res) => {
     res.status(StatusCodes.OK).json({len: his.length, his})
 
 }
-module.exports = { transfer, deposit, withdraw, TransactionHistory}
+module.exports = { transfer, deposit, withdraw, TransactionHistory, balance}

@@ -8,6 +8,8 @@ const connectDB = require('./db/connect');
 const authenticateUser = require('./middleware/authentication');
 const UserRouter = require('./routes/User');
 const MoneyRouter = require('./routes/Money');
+const AdminRouter = require('./routes/Admin');
+
 
 const notFoundMiddleware = require('./middleware/not-found');
 const errorHandlerMiddleware = require('./middleware/error-handler');
@@ -15,11 +17,12 @@ const errorHandlerMiddleware = require('./middleware/error-handler');
 app.use(express.json());
 
 app.get('/', (req, res) => {
-    res.send('<h1>Jobs API</h1><a href="/api-docs">Documentation</a>');
+    res.send('<h1>Iron Bank Of Braavos</h1>');
 });
 
 app.use('/api/v1/User', UserRouter);
 app.use('/api/v1/Money', MoneyRouter);
+app.use('/api/v1/Admin', AdminRouter);
 
 
 const port = process.env.PORT || 3000;
