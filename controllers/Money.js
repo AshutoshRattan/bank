@@ -1,5 +1,6 @@
 const User = require('../models/User')
 const Transaction = require('../models/transactions')
+const  {transactionEmail, depositEmail, withdrawEmail} = require('../utils/index') 
 const { StatusCodes, OK } = require('http-status-codes')
 const { BadRequestError, UnauthenticatedError } = require('../errors')
 
@@ -24,7 +25,8 @@ var transfer = async (req, res) => {
     await User.findByIdAndUpdate(from, { balance: newBal1 })
     await User.findByIdAndUpdate(to, { balance: newBal2 })
 
-    await Transaction.create({ from: user1, to: user2, amount: amount });
+    const transaction = await Transaction.create({ from: user1, to: user2, amount: amount });
+    transactionEmail(transaction, {user1, user2})
 
     res.status(StatusCodes.OK).json({ bal: newBal1 })
 }
@@ -41,7 +43,8 @@ const deposit = async (req, res) => {
     const newBal = user.balance + amount
     await User.findByIdAndUpdate(id, { balance: newBal })
 
-    await Transaction.create({ from: id, to: id, amount: amount });
+    const transaction = await Transaction.create({ from: id, to: id, amount: amount });
+    depositEmail(transaction, user)
 
     res.status(StatusCodes.OK).json({ bal: newBal })
 }
@@ -61,7 +64,8 @@ const withdraw = async (req, res) => {
     const newBal = user.balance - amount
     await User.findByIdAndUpdate(id, { balance: newBal })
 
-    await Transaction.create({ from: id, to: id, amount: -amount });
+    const transaction = await Transaction.create({ from: id, to: id, amount: -amount });
+    withdrawEmail(transaction, user)
 
     res.status(StatusCodes.OK).json({ bal: newBal})
 
