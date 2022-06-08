@@ -1,6 +1,6 @@
 const mongoose = require('mongoose')
 
-var Transaction = new mongoose.Schema({
+let Transaction = new mongoose.Schema({
     from: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "User",
