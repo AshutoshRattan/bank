@@ -5,7 +5,7 @@ const { StatusCodes, OK } = require('http-status-codes')
 const { BadRequestError, UnauthenticatedError } = require('../errors')
 
 var transfer = async (req, res) => {
-    const from = req.user.userId
+    const from = req.user._id
     var { to, amount } = req.body
     amount = Math.abs(amount)
 
@@ -32,7 +32,7 @@ var transfer = async (req, res) => {
 }
 
 const deposit = async (req, res) => {
-    const id = req.user.userId
+    const id = req.user._id
     var { amount } = req.body
     amount = Math.abs(amount)
 
@@ -50,7 +50,7 @@ const deposit = async (req, res) => {
 }
 
 const withdraw = async (req, res) => {
-    const id = req.user.userId
+    const id = req.user._id
     var { amount } = req.body
     amount = Math.abs(amount)
 
@@ -72,14 +72,15 @@ const withdraw = async (req, res) => {
 }
 
 const balance = async (req, res) => {
-    const id = req.user.userId
+    const id = req.user._id
     const user = await User.findById(id)
+    console.log(req.user)
     const bal = user.balance
     res.status(StatusCodes.OK).json({bal: bal})
 }
 
 const TransactionHistory = async (req, res) => {
-    const id = req.user.userId
+    const id = req.user._id
     var limit = req.body.limit
     if(!limit) limit = 10
     const user = await User.findById(id)
