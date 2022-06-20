@@ -2,7 +2,7 @@ const mongoose = require('mongoose')
 const bcrypt = require('bcryptjs')
 const jwt = require('jsonwebtoken')
 
-var UserSchema = new mongoose.Schema({
+let UserSchema = new mongoose.Schema({
     name: {
         type: String,
         required: [true, 'Please provide a name'],
@@ -32,14 +32,14 @@ var UserSchema = new mongoose.Schema({
         minlength: 6,
     },
 
-    balance : {
+    balance: {
         type: Number,
         default: 10000,
     },
     // add transaction history here
 })
 
-UserSchema.pre('save', async function(){
+UserSchema.pre('save', async function () {
     const salt = await bcrypt.genSalt(10)
     this.password = await bcrypt.hash(this.password, salt)
 })
