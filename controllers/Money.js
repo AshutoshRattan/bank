@@ -74,7 +74,6 @@ const withdraw = async (req, res) => {
 const balance = async (req, res) => {
     const id = req.user._id
     const user = await User.findById(id)
-    console.log(req.user)
     const bal = user.balance
     res.status(StatusCodes.OK).json({bal: bal})
 }
