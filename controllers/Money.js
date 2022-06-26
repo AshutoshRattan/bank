@@ -3,6 +3,11 @@ const Transaction = require('../models/transactions')
 const  {transactionEmail, depositEmail, withdrawEmail} = require('../utils/index') 
 const { StatusCodes, OK } = require('http-status-codes')
 const { BadRequestError, UnauthenticatedError } = require('../errors')
+const queue = require('../configs/kue')
+
+const depositWorker = require('../workers/deposit_worker')
+const withdrawWorker = require('../workers/withdraw_worker')
+const transactionWorker = require('../workers/transaction_worker')
 
 var transfer = async (req, res) => {
     const from = req.user._id
@@ -26,7 +31,13 @@ var transfer = async (req, res) => {
     await User.findByIdAndUpdate(to, { balance: newBal2 })
 
     const transaction = await Transaction.create({ from: user1, to: user2, amount: amount });
-    await transactionEmail(transaction, {user1, user2})
+    const users = {user1, user2}
+    let job = queue.create('transactionEmail', { transaction, users}).save((err) => {
+        if(err) console.log(err)
+        console.log(job.id)
+    })
+    
+    //await transactionEmail(transaction, {user1, user2})
 
     res.status(StatusCodes.OK).json({ bal: newBal1 })
 }
@@ -44,7 +55,13 @@ const deposit = async (req, res) => {
     await User.findByIdAndUpdate(id, { balance: newBal })
 
     const transaction = await Transaction.create({ from: id, to: id, amount: amount });
-    await depositEmail(transaction, user)
+    
+    let job = queue.create('depositEmail', {transaction, user}).save((err) => {
+        if (err) console.log(err)
+        console.log(job.id)
+    })
+
+    //await depositEmail(transaction, user)
 
     res.status(StatusCodes.OK).json({ bal: newBal })
 }
@@ -65,7 +82,13 @@ const withdraw = async (req, res) => {
     await User.findByIdAndUpdate(id, { balance: newBal })
 
     const transaction = await Transaction.create({ from: id, to: id, amount: -amount });
-    await withdrawEmail(transaction, user)
+    
+    let job = queue.create('withdrawEmail', { transaction, user }).save((err) => {
+        if (err) console.log(err)
+        console.log(job.id)
+    })
+    
+    //await withdrawEmail(transaction, user)
 
     res.status(StatusCodes.OK).json({ bal: newBal})
 
