@@ -1,6 +1,6 @@
 const User = require('../models/User')
 const Transaction = require('../models/transactions')
-const  {transactionEmail, depositEmail, withdrawEmail} = require('../utils/index') 
+const { transactionEmail, depositEmail, withdrawEmail } = require('../utils/index')
 const { StatusCodes, OK } = require('http-status-codes')
 const { BadRequestError, UnauthenticatedError } = require('../errors')
 const queue = require('../configs/kue')
@@ -9,9 +9,11 @@ const depositWorker = require('../workers/deposit_worker')
 const withdrawWorker = require('../workers/withdraw_worker')
 const transactionWorker = require('../workers/transaction_worker')
 
+
 var transfer = async (req, res) => {
     const from = req.user._id
     var { to, amount } = req.body
+
     amount = Math.abs(amount)
 
     const user1 = await User.findById(from)
@@ -39,12 +41,14 @@ var transfer = async (req, res) => {
     
     //await transactionEmail(transaction, {user1, user2})
 
+
     res.status(StatusCodes.OK).json({ bal: newBal1 })
 }
 
 const deposit = async (req, res) => {
     const id = req.user._id
     var { amount } = req.body
+
     amount = Math.abs(amount)
 
     const user = await User.findById(id)
@@ -69,6 +73,7 @@ const deposit = async (req, res) => {
 const withdraw = async (req, res) => {
     const id = req.user._id
     var { amount } = req.body
+
     amount = Math.abs(amount)
 
     const user = await User.findById(id)
@@ -90,7 +95,7 @@ const withdraw = async (req, res) => {
     
     //await withdrawEmail(transaction, user)
 
-    res.status(StatusCodes.OK).json({ bal: newBal})
+    res.status(StatusCodes.OK).json({ bal: newBal })
 
 }
 
@@ -98,13 +103,14 @@ const balance = async (req, res) => {
     const id = req.user._id
     const user = await User.findById(id)
     const bal = user.balance
-    res.status(StatusCodes.OK).json({bal: bal})
+    res.status(StatusCodes.OK).json({ bal: bal })
 }
 
 const TransactionHistory = async (req, res) => {
     const id = req.user._id
     var limit = req.body.limit
     if(!limit) limit = 10
+
     const user = await User.findById(id)
     if (!user) {
         throw new BadRequestError("please send correct id")
@@ -115,8 +121,8 @@ const TransactionHistory = async (req, res) => {
                 { from: id },
                 { to: id }
             ]
-    }).select('to from amount createdAt').sort({ "createdAt": -1}).limit(limit)
-    res.status(StatusCodes.OK).json({len: his.length, his})
+    }).select('to from amount createdAt').sort({ "createdAt": -1 }).limit(limit)
+    res.status(StatusCodes.OK).json({ len: his.length, his })
 
 }
-module.exports = { transfer, deposit, withdraw, TransactionHistory, balance}
+module.exports = { transfer, deposit, withdraw, TransactionHistory, balance }
