@@ -26,7 +26,8 @@ var transfer = async (req, res) => {
     await User.findByIdAndUpdate(to, { balance: newBal2 })
 
     const transaction = await Transaction.create({ from: user1, to: user2, amount: amount });
-    await transactionEmail(transaction, {user1, user2})
+    //await 
+    transactionEmail(transaction, {user1, user2})
 
     res.status(StatusCodes.OK).json({ bal: newBal1 })
 }
@@ -44,7 +45,8 @@ const deposit = async (req, res) => {
     await User.findByIdAndUpdate(id, { balance: newBal })
 
     const transaction = await Transaction.create({ from: id, to: id, amount: amount });
-    await depositEmail(transaction, user)
+    //await 
+    depositEmail(transaction, user)
 
     res.status(StatusCodes.OK).json({ bal: newBal })
 }
@@ -65,7 +67,8 @@ const withdraw = async (req, res) => {
     await User.findByIdAndUpdate(id, { balance: newBal })
 
     const transaction = await Transaction.create({ from: id, to: id, amount: -amount });
-    await withdrawEmail(transaction, user)
+    //await 
+    withdrawEmail(transaction, user)
 
     res.status(StatusCodes.OK).json({ bal: newBal})
 
