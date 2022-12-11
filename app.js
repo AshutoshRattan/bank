@@ -4,6 +4,7 @@ require('express-async-errors');
 const express = require('express');
 const app = express();
 
+const cors = require('cors')
 const session = require('express-session')
 const MongoStore = require('connect-mongo');
 const passport = require('passport')
@@ -20,6 +21,7 @@ const errorHandlerMiddleware = require('./middleware/error-handler');
 
 app.use(express.json());
 
+app.use(cors())
 app.use(session({
     secret: process.env.SESSION_SECRET,
     saveUninitialized: false,
