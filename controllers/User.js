@@ -1,6 +1,6 @@
 const User = require('../models/User')
 const { StatusCodes, OK } = require('http-status-codes')
-const { BadRequestError, UnauthenticatedError } = require('../errors')
+const { BadRequestError, UnauthenticatedError, NotFoundError } = require('../errors')
 
 var createAccount = async (req, res) => {
     const {name, email, password} = req.body
@@ -14,8 +14,9 @@ var createAccount = async (req, res) => {
     let role = 'user'
     if (await User.countDocuments({}) === 0) role = 'admin'
     const user = await User.create({ name, email, password, role}) // name email password
+    console.log(user)
     const JWT = user.createJWT();
-    res.status(StatusCodes.OK).json({token: JWT, id: user._id}) // id name
+    res.status(StatusCodes.OK).json({JWT: JWT, id: user._id}) // id name
 }
 
 var login = async(req, res) => { // email password
@@ -26,13 +27,13 @@ var login = async(req, res) => { // email password
 
     const user = await User.findOne({email})
     if(!user){
-        throw new UnauthenticatedError('no user with this email')
+        throw new NotFoundError('no user with this email')
     }
 
     const isCorrectPassword = await user.comparePassword(password)
 
     if (!isCorrectPassword) {
-        throw new UnauthenticatedError('no user with this email and password')
+        throw new NotFoundError('no user with this email and password')
     }
 
     const JWT = user.createJWT()

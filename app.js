@@ -44,7 +44,7 @@ app.get('/', (req, res) => {
 app.use('/api/v1/User', UserRouter);
 app.use('/api/v1/Money', MoneyRouter);
 app.use('/api/v1/Admin', AdminRouter);
-
+app.use(errorHandlerMiddleware)
 
 const port = process.env.PORT || 3000;
 
