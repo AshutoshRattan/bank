@@ -83,8 +83,11 @@ const balance = async (req, res) => {
 
 const TransactionHistory = async (req, res) => {
     const id = req.user._id
-    var limit = req.body.limit
+    var {page, limit} = req.query
     if(!limit) limit = 10
+    if(!page) page = 1
+    page = parseInt(page)
+    limit = parseInt(limit)
     const user = await User.findById(id)
     if (!user) {
         throw new BadRequestError("please send correct id")
@@ -95,7 +98,7 @@ const TransactionHistory = async (req, res) => {
                 { from: id },
                 { to: id }
             ]
-    }).select('to from amount createdAt').sort({ "createdAt": -1}).limit(limit)
+    }).select('to from amount createdAt').sort({ "createdAt": -1}).skip((page - 1) * limit).limit(limit)
     res.status(StatusCodes.OK).json({len: his.length, his})
 
 }
