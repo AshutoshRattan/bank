@@ -1,4 +1,5 @@
 const User = require('../models/User')
+const Alias = require('../models/Alias')
 const { StatusCodes, OK } = require('http-status-codes')
 const { BadRequestError, UnauthenticatedError, NotFoundError } = require('../errors')
 
@@ -40,7 +41,31 @@ var login = async(req, res) => { // email password
     res.status(StatusCodes.OK).json({ user: { name: user.name, id: user._id}, JWT })
 }
 
+let createAlias = async (req, res) => {
+    const id = req.user._id
+    let {aliasID, alias} = req.body
+    if (!aliasID || !alias) {
+        throw new BadRequestError('please provide full infomation')
+    }
+    let user = await User.findById(aliasID)
+    if(!user){
+        throw new BadRequestError("please send correct id")
+    }
+    let a = await Alias.findOne({user: id, user2: aliasID})
+    console.log(alias)
+    if(a != null){
+        await Alias.findByIdAndUpdate(a._id, {alias})
+        res.status(StatusCodes.OK).json({msg: "alias updated"})
+    }
+    else{
+        await Alias.create({user: id, user2: aliasID, alias: alias})
+        res.status(StatusCodes.OK).json({ msg: "alias created" })
+    }
+
+
+}
 module.exports = {
     createAccount,
-    login
+    login,
+    createAlias
 }
