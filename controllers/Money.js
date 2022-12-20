@@ -99,7 +99,15 @@ const TransactionHistory = async (req, res) => {
                 { to: id }
             ]
     }).select('to from amount createdAt').sort({ "createdAt": -1}).skip((page - 1) * limit).limit(limit)
-    res.status(StatusCodes.OK).json({len: his.length, his})
+
+    const all = await Transaction.find({
+        $or:
+            [
+                { from: id },
+                { to: id }
+            ]
+    })
+    res.status(StatusCodes.OK).json({len: all.length, his})
 
 }
 module.exports = { transfer, deposit, withdraw, TransactionHistory, balance}
