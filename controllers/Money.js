@@ -1,12 +1,12 @@
 const User = require('../models/User')
 const Transaction = require('../models/transactions')
-const  {transactionEmail, depositEmail, withdrawEmail} = require('../utils/index') 
+const { transactionEmail, depositEmail, withdrawEmail } = require('../utils/index')
 const { StatusCodes, OK } = require('http-status-codes')
 const { BadRequestError, UnauthenticatedError } = require('../errors')
 
-var transfer = async (req, res) => {
+let transfer = async (req, res) => {
     const from = req.user._id
-    var { to, amount } = req.body
+    let { to, amount } = req.body
     amount = Math.abs(amount)
 
     const user1 = await User.findById(from)
@@ -21,20 +21,36 @@ var transfer = async (req, res) => {
     }
     const newBal1 = user1.balance - amount
     const newBal2 = user2.balance + amount
+    let transaction
 
-    await User.findByIdAndUpdate(from, { balance: newBal1 })
-    await User.findByIdAndUpdate(to, { balance: newBal2 })
+    let session = await User.startSession()
+    session.startTransaction()
+    try {
+        const opts = { session }
 
-    const transaction = await Transaction.create({ from: user1, to: user2, amount: amount });
+        await User.findByIdAndUpdate(from, { balance: newBal1 }, opts)
+        await User.findByIdAndUpdate(to, { balance: newBal2 }, opts)
+        transaction = await Transaction.create([{ from: user1, to: user2, amount: amount }], opts)
+
+        await session.commitTransaction()
+        session.endSession()
+    } catch (e) {
+        console.log("inside catch")
+        await session.abortTransaction()
+        session.endSession()
+        throw e
+    }
+
+
     //await 
-    transactionEmail(transaction, {user1, user2})
+    transactionEmail(transaction, { user1, user2 })
 
     res.status(StatusCodes.OK).json({ bal: newBal1 })
 }
 
 const deposit = async (req, res) => {
     const id = req.user._id
-    var { amount } = req.body
+    let { amount } = req.body
     amount = Math.abs(amount)
 
     const user = await User.findById(id)
@@ -53,7 +69,7 @@ const deposit = async (req, res) => {
 
 const withdraw = async (req, res) => {
     const id = req.user._id
-    var { amount } = req.body
+    let { amount } = req.body
     amount = Math.abs(amount)
 
     const user = await User.findById(id)
@@ -70,7 +86,7 @@ const withdraw = async (req, res) => {
     //await 
     withdrawEmail(transaction, user)
 
-    res.status(StatusCodes.OK).json({ bal: newBal})
+    res.status(StatusCodes.OK).json({ bal: newBal })
 
 }
 
@@ -78,14 +94,14 @@ const balance = async (req, res) => {
     const id = req.user._id
     const user = await User.findById(id)
     const bal = user.balance
-    res.status(StatusCodes.OK).json({bal: bal})
+    res.status(StatusCodes.OK).json({ bal: bal })
 }
 
 const TransactionHistory = async (req, res) => {
     const id = req.user._id
-    var {page, limit} = req.query
-    if(!limit) limit = 10
-    if(!page) page = 1
+    let { page, limit } = req.query
+    if (!limit) limit = 10
+    if (!page) page = 1
     page = parseInt(page)
     limit = parseInt(limit)
     const user = await User.findById(id)
@@ -98,7 +114,7 @@ const TransactionHistory = async (req, res) => {
                 { from: id },
                 { to: id }
             ]
-    }).select('to from amount createdAt').sort({ "createdAt": -1}).skip((page - 1) * limit).limit(limit)
+    }).select('to from amount createdAt').sort({ "createdAt": -1 }).skip((page - 1) * limit).limit(limit)
 
     const all = await Transaction.find({
         $or:
@@ -107,7 +123,7 @@ const TransactionHistory = async (req, res) => {
                 { to: id }
             ]
     })
-    res.status(StatusCodes.OK).json({len: all.length, his})
+    res.status(StatusCodes.OK).json({ len: all.length, his })
 
 }
-module.exports = { transfer, deposit, withdraw, TransactionHistory, balance}
+module.exports = { transfer, deposit, withdraw, TransactionHistory, balance }
