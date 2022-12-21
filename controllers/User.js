@@ -15,7 +15,7 @@ var createAccount = async (req, res) => {
     let role = 'user'
     if (await User.countDocuments({}) === 0) role = 'admin'
     const user = await User.create({ name, email, password, role}) // name email password
-    console.log(user)
+    // console.log(user)
     const JWT = user.createJWT();
     res.status(StatusCodes.OK).json({JWT: JWT, id: user._id}) // id name
 }
@@ -52,20 +52,30 @@ let createAlias = async (req, res) => {
         throw new BadRequestError("please send correct id")
     }
     let a = await Alias.findOne({user: id, user2: aliasID})
-    console.log(alias)
+    // console.log(alias)
     if(a != null){
         await Alias.findByIdAndUpdate(a._id, {alias})
-        res.status(StatusCodes.OK).json({msg: "alias updated"})
+        let aliasList = await Alias.find({ user: id })
+        res.status(StatusCodes.OK).json({msg: "alias updated", data:aliasList})
     }
     else{
         await Alias.create({user: id, user2: aliasID, alias: alias})
-        res.status(StatusCodes.OK).json({ msg: "alias created" })
+        let aliasList = await Alias.find({ user: id })
+        res.status(StatusCodes.OK).json({ msg: "alias created", data:aliasList})
     }
 
 
 }
+
+let getAliases = async (req, res) => {
+    let id = req.user._id
+    let aliasList = await Alias.find({user: id})
+    let length = aliasList.length
+    res.status(StatusCodes.OK).json({len: length, data: aliasList})
+}
 module.exports = {
     createAccount,
     login,
-    createAlias
+    createAlias,
+    getAliases
 }
