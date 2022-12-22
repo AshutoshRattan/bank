@@ -1,3 +1,4 @@
+const bcrypt = require('bcryptjs')
 const User = require('../models/User')
 const Alias = require('../models/Alias')
 const ForgotPasswordOTP = require('../models/forgotPasswordOTP')
@@ -95,10 +96,32 @@ let forgotPasswordOTP = async (req, res) => {
     }
     res.status(StatusCodes.OK).json({"msg":"please check your email"})
 }
+
+let forgotPassword = async (req, res) => {
+    let {email, password, OTP} = req.body
+    let user = await User.findOne({email})
+    if(!user){
+        throw new BadRequestError("this email is not registered with us")
+    }
+    let emailOTP = await ForgotPasswordOTP.findOne({"email": email})
+    if(!emailOTP){
+        throw new BadRequestError("please try again")
+    }
+    if(emailOTP.OTP != OTP){
+        await ForgotPasswordOTP.deleteOne(user)
+        throw new BadRequestError("incorrect OTP please try again")
+    }
+    const salt = await bcrypt.genSalt(10)
+    password = await bcrypt.hash(password, salt)
+    await User.updateOne(user, {password})
+    await ForgotPasswordOTP.deleteOne({email})
+    res.status(StatusCodes.OK).json("password changed successfully")
+}
 module.exports = {
     createAccount,
     login,
     createAlias,
     getAliases,
-    forgotPasswordOTP
+    forgotPasswordOTP,
+    forgotPassword
 }
