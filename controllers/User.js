@@ -88,7 +88,7 @@ let forgotPasswordOTP = async (req, res) => {
     if(emailOTP) await ForgotPasswordOTP.deleteOne({"email": emailOTP.email})
     try{
         await forgotPasswordOTPEmail(user, OTP)
-        ForgotPasswordOTP.create({"email": email, "OTP": OTP}) // should i use await here
+        ForgotPasswordOTP.create({"email": email, "OTP": OTP, createdAt: Date.now()}) // should i use await here
     }
     catch(e){
         console.log(e)
@@ -108,8 +108,12 @@ let forgotPassword = async (req, res) => {
         throw new BadRequestError("please try again")
     }
     if(emailOTP.OTP != OTP){
-        await ForgotPasswordOTP.deleteOne(user)
+        await ForgotPasswordOTP.deleteOne({email})
         throw new BadRequestError("incorrect OTP please try again")
+    }
+    if(emailOTP.createdAt + 300000 < Date.now()){
+        await ForgotPasswordOTP.deleteOne({ email })
+        throw new BadRequestError("OTP expired")
     }
     const salt = await bcrypt.genSalt(10)
     password = await bcrypt.hash(password, salt)
