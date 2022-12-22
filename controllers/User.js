@@ -1,5 +1,7 @@
 const User = require('../models/User')
 const Alias = require('../models/Alias')
+const ForgotPasswordOTP = require('../models/forgotPasswordOTP')
+const { forgotPasswordOTPEmail } = require('../utils/index')
 const { StatusCodes, OK } = require('http-status-codes')
 const { BadRequestError, UnauthenticatedError, NotFoundError } = require('../errors')
 
@@ -73,9 +75,30 @@ let getAliases = async (req, res) => {
     let length = aliasList.length
     res.status(StatusCodes.OK).json({ len: length, data: aliasList })
 }
+
+let forgotPasswordOTP = async (req, res) => {
+    let {email} = req.body
+    let user = await User.findOne({email})
+    if(!user){
+        throw new BadRequestError("this email is not registered with us")
+    }
+    let OTP = Math.floor((Math.random() * 999999) + 1) // not cryptographically secure
+    let emailOTP = await ForgotPasswordOTP.findOne({ "email": email }) // 
+    if(emailOTP) await ForgotPasswordOTP.deleteOne({"email": emailOTP.email})
+    try{
+        await forgotPasswordOTPEmail(user, OTP)
+        ForgotPasswordOTP.create({"email": email, "OTP": OTP}) // should i use await here
+    }
+    catch(e){
+        console.log(e)
+        throw new BadRequestError("this email does not exist")
+    }
+    res.status(StatusCodes.OK).json({"msg":"please check your email"})
+}
 module.exports = {
     createAccount,
     login,
     createAlias,
-    getAliases
+    getAliases,
+    forgotPasswordOTP
 }
