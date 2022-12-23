@@ -10,9 +10,9 @@ const withdrawWorker = require('../workers/withdraw_worker')
 const transactionWorker = require('../workers/transaction_worker')
 
 
-var transfer = async (req, res) => {
+let transfer = async (req, res) => {
     const from = req.user._id
-    var { to, amount } = req.body
+    let { to, amount } = req.body
 
     amount = Math.abs(amount)
 
@@ -28,18 +28,29 @@ var transfer = async (req, res) => {
     }
     const newBal1 = user1.balance - amount
     const newBal2 = user2.balance + amount
+    let transaction
 
-    await User.findByIdAndUpdate(from, { balance: newBal1 })
-    await User.findByIdAndUpdate(to, { balance: newBal2 })
+    let session = await User.startSession()
+    session.startTransaction()
+    try {
+        const opts = { session }
 
-    const transaction = await Transaction.create({ from: user1, to: user2, amount: amount });
-    const users = {user1, user2}
-    let job = queue.create('transactionEmail', { transaction, users}).save((err) => {
-        if(err) console.log(err)
-        console.log(job.id)
-    })
-    
-    //await transactionEmail(transaction, {user1, user2})
+        await User.findByIdAndUpdate(from, { balance: newBal1 }, opts)
+        await User.findByIdAndUpdate(to, { balance: newBal2 }, opts)
+        transaction = await Transaction.create([{ from: user1, to: user2, amount: amount }], opts)
+
+        await session.commitTransaction()
+        session.endSession()
+    } catch (e) {
+        console.log("inside catch")
+        await session.abortTransaction()
+        session.endSession()
+        throw e
+    }
+
+
+    //await 
+    transactionEmail(transaction, { user1, user2 })
 
 
     res.status(StatusCodes.OK).json({ bal: newBal1 })
@@ -47,7 +58,7 @@ var transfer = async (req, res) => {
 
 const deposit = async (req, res) => {
     const id = req.user._id
-    var { amount } = req.body
+    let { amount } = req.body
 
     amount = Math.abs(amount)
 
@@ -59,20 +70,16 @@ const deposit = async (req, res) => {
     await User.findByIdAndUpdate(id, { balance: newBal })
 
     const transaction = await Transaction.create({ from: id, to: id, amount: amount });
-    
-    let job = queue.create('depositEmail', {transaction, user}).save((err) => {
-        if (err) console.log(err)
-        console.log(job.id)
-    })
+    //await 
+    depositEmail(transaction, user)
 
-    //await depositEmail(transaction, user)
 
     res.status(StatusCodes.OK).json({ bal: newBal })
 }
 
 const withdraw = async (req, res) => {
     const id = req.user._id
-    var { amount } = req.body
+    let { amount } = req.body
 
     amount = Math.abs(amount)
 
@@ -87,13 +94,9 @@ const withdraw = async (req, res) => {
     await User.findByIdAndUpdate(id, { balance: newBal })
 
     const transaction = await Transaction.create({ from: id, to: id, amount: -amount });
-    
-    let job = queue.create('withdrawEmail', { transaction, user }).save((err) => {
-        if (err) console.log(err)
-        console.log(job.id)
-    })
-    
-    //await withdrawEmail(transaction, user)
+    //await 
+    withdrawEmail(transaction, user)
+
 
     res.status(StatusCodes.OK).json({ bal: newBal })
 
@@ -108,8 +111,11 @@ const balance = async (req, res) => {
 
 const TransactionHistory = async (req, res) => {
     const id = req.user._id
-    var limit = req.body.limit
-    if(!limit) limit = 10
+    let { page, limit } = req.query
+    if (!limit) limit = 10
+    if (!page) page = 1
+    page = parseInt(page)
+    limit = parseInt(limit)
 
     const user = await User.findById(id)
     if (!user) {
@@ -121,8 +127,17 @@ const TransactionHistory = async (req, res) => {
                 { from: id },
                 { to: id }
             ]
-    }).select('to from amount createdAt').sort({ "createdAt": -1 }).limit(limit)
-    res.status(StatusCodes.OK).json({ len: his.length, his })
+    }).select('to from amount createdAt').sort({ "createdAt": -1 }).skip((page - 1) * limit).limit(limit)
+
+    const all = await Transaction.find({
+        $or:
+            [
+                { from: id },
+                { to: id }
+            ]
+    })
+    res.status(StatusCodes.OK).json({ len: all.length, his })
+
 
 }
 module.exports = { transfer, deposit, withdraw, TransactionHistory, balance }

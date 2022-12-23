@@ -16,6 +16,7 @@ const transactions = async (req, res) => {
     }).select('to from amount createdAt').sort({ "createdAt": -1 }).limit(limit)
 
     res.status(StatusCodes.OK).json({ len: transactions.length, transactions })
+
 }
 
 const allTransactions = async (req, res) => {

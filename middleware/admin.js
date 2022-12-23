@@ -4,7 +4,7 @@ const { UnauthenticatedError } = require('../errors')
 
 
 const admin = async (req, res, next) => {
-    var id = req.user._id
+    let id = req.user._id
     //console.log(req.user)
 
     if (!id) throw BadRequestError("please send id")
