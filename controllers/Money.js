@@ -3,11 +3,8 @@ const Transaction = require('../models/transactions')
 const { transactionEmail, depositEmail, withdrawEmail } = require('../utils/index')
 const { StatusCodes, OK } = require('http-status-codes')
 const { BadRequestError, UnauthenticatedError } = require('../errors')
-const queue = require('../configs/kue')
 
-const depositWorker = require('../workers/deposit_worker')
-const withdrawWorker = require('../workers/withdraw_worker')
-const transactionWorker = require('../workers/transaction_worker')
+
 
 
 let transfer = async (req, res) => {
