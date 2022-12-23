@@ -21,6 +21,7 @@ let createAccount = async (req, res) => {
     // console.log(user)
     const JWT = user.createJWT();
     res.status(StatusCodes.OK).json({ JWT: JWT, id: user._id }) // id name
+
 }
 
 let login = async (req, res) => { // email password
@@ -32,6 +33,7 @@ let login = async (req, res) => { // email password
     const user = await User.findOne({ email })
     if (!user) {
         throw new NotFoundError('no user with this email')
+
     }
 
     const isCorrectPassword = await user.comparePassword(password)
@@ -75,6 +77,7 @@ let getAliases = async (req, res) => {
     let aliasList = await Alias.find({ user: id })
     let length = aliasList.length
     res.status(StatusCodes.OK).json({ len: length, data: aliasList })
+
 }
 
 let forgotPasswordOTP = async (req, res) => {

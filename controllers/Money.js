@@ -3,10 +3,17 @@ const Transaction = require('../models/transactions')
 const { transactionEmail, depositEmail, withdrawEmail } = require('../utils/index')
 const { StatusCodes, OK } = require('http-status-codes')
 const { BadRequestError, UnauthenticatedError } = require('../errors')
+const queue = require('../configs/kue')
+
+const depositWorker = require('../workers/deposit_worker')
+const withdrawWorker = require('../workers/withdraw_worker')
+const transactionWorker = require('../workers/transaction_worker')
+
 
 let transfer = async (req, res) => {
     const from = req.user._id
     let { to, amount } = req.body
+
     amount = Math.abs(amount)
 
     const user1 = await User.findById(from)
@@ -45,12 +52,14 @@ let transfer = async (req, res) => {
     //await 
     transactionEmail(transaction, { user1, user2 })
 
+
     res.status(StatusCodes.OK).json({ bal: newBal1 })
 }
 
 const deposit = async (req, res) => {
     const id = req.user._id
     let { amount } = req.body
+
     amount = Math.abs(amount)
 
     const user = await User.findById(id)
@@ -64,12 +73,14 @@ const deposit = async (req, res) => {
     //await 
     depositEmail(transaction, user)
 
+
     res.status(StatusCodes.OK).json({ bal: newBal })
 }
 
 const withdraw = async (req, res) => {
     const id = req.user._id
     let { amount } = req.body
+
     amount = Math.abs(amount)
 
     const user = await User.findById(id)
@@ -85,6 +96,7 @@ const withdraw = async (req, res) => {
     const transaction = await Transaction.create({ from: id, to: id, amount: -amount });
     //await 
     withdrawEmail(transaction, user)
+
 
     res.status(StatusCodes.OK).json({ bal: newBal })
 
@@ -104,6 +116,7 @@ const TransactionHistory = async (req, res) => {
     if (!page) page = 1
     page = parseInt(page)
     limit = parseInt(limit)
+
     const user = await User.findById(id)
     if (!user) {
         throw new BadRequestError("please send correct id")
@@ -124,6 +137,7 @@ const TransactionHistory = async (req, res) => {
             ]
     })
     res.status(StatusCodes.OK).json({ len: all.length, his })
+
 
 }
 module.exports = { transfer, deposit, withdraw, TransactionHistory, balance }
