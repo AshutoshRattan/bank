@@ -124,11 +124,29 @@ let forgotPassword = async (req, res) => {
     await ForgotPasswordOTP.deleteOne({email})
     res.status(StatusCodes.OK).json("password changed successfully")
 }
+
+let changePassword = async (req, res) => {
+    let id = req.user._id
+    let {password, newPassword} = req.body
+    let user = await User.findById(id)
+    if(!user){
+        throw new BadRequestError("no user with this email exist")
+    }
+    let passwordIsCorrect = await user.comparePassword(password)
+    if(!passwordIsCorrect){
+        throw new BadRequestError("incorrect password")
+    }
+    const salt = await bcrypt.genSalt(10)
+    newPassword = await bcrypt.hash(newPassword, salt)
+    await User.findByIdAndUpdate(id, {password:newPassword})
+    res.status(StatusCodes.OK).json({"msg":"password changed successfully"})
+}
 module.exports = {
     createAccount,
     login,
     createAlias,
     getAliases,
     forgotPasswordOTP,
-    forgotPassword
+    forgotPassword,
+    changePassword
 }
