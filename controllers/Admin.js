@@ -34,6 +34,8 @@ const transactions = async (req, res) => {
             
             {from: id},
             {to: id}
+            // you can not use regex on ObjectId
+            // https://stackoverflow.com/questions/29568350/query-mongodb-with-a-regex-expression-against-an-objectid
         ]
     } 
     let all = await Transaction.find(queryObject)
