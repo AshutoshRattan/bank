@@ -3,28 +3,43 @@ const Transaction = require('../models/transactions')
 const { StatusCodes, OK } = require('http-status-codes')
 const { BadRequestError, UnauthenticatedError } = require('../errors')
 
+// const transactions = async (req, res) => {
+//     const id = req.params.id
+//     let limit = req.query.limit || 10
+//     limit = parseInt(limit)
+//     const transactions = await Transaction.find({
+//         $or:
+//             [
+//                 { from: id },
+//                 { to: id }
+//             ]
+//     }).select('to from amount createdAt').sort({ "createdAt": -1 }).limit(limit)
+
+//     res.status(StatusCodes.OK).json({ len: transactions.length, transactions })
+
+// }
+
 const transactions = async (req, res) => {
-    const id = req.params.id
-    let limit = req.query.limit || 10
-    limit = parseInt(limit)
-    const transactions = await Transaction.find({
-        $or:
-            [
-                { from: id },
-                { to: id }
-            ]
-    }).select('to from amount createdAt').sort({ "createdAt": -1 }).limit(limit)
+    let {page, limit, id} = req.query
+    let queryObject = {}
 
-    res.status(StatusCodes.OK).json({ len: transactions.length, transactions })
+    if(!limit){
+        limit = 10
+    }
+    if(!page){
+        page = 1
+    }
+    if (id) {
+        queryObject.$or = [
+            
+            {from: id},
+            {to: id}
+        ]
+    } 
+    let all = await Transaction.find(queryObject)
+    const transactions = await Transaction.find(queryObject).select('to from amount createdAt').sort({ "createdAt": -1 }).skip((page - 1) * limit).limit(limit)
 
-}
-
-const allTransactions = async (req, res) => {
-    let limit = req.query.limit || 50
-    limit = parseInt(limit)
-    const transactions = await Transaction.find({}).select('to from amount createdAt').sort({ "createdAt": -1 }).limit(limit)
-
-    res.status(StatusCodes.OK).json({ len: transactions.length, transactions })
+    res.status(StatusCodes.OK).json({ len: all.length, his:transactions})
 }
 
 const makeAdmin = async (req, res) => {
@@ -34,4 +49,4 @@ const makeAdmin = async (req, res) => {
     res.status(StatusCodes.OK).json({ "message": "done" })
 }
 
-module.exports = { transactions, allTransactions, makeAdmin }
+module.exports = { transactions, makeAdmin }
