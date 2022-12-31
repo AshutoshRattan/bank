@@ -22,11 +22,16 @@ const users = async (req, res) => {
     }
 
     if (query) {
-        queryObject.$or = [
-
-            { name: { $regex: query, $options: 'i' } },
-            { email: { $regex: query, $options: 'i' } }
-        ]
+        if (/^[a-fA-F0-9]{24}$/.test(query)){
+            queryObject._id = query
+        }
+        else{
+            queryObject.$or = [
+    
+                { name: { $regex: query, $options: 'i' } },
+                { email: { $regex: query, $options: 'i' } }
+            ]
+        }
     }
 
     let all = await User.find(queryObject)
