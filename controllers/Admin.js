@@ -3,21 +3,42 @@ const Transaction = require('../models/transactions')
 const { StatusCodes, OK } = require('http-status-codes')
 const { BadRequestError, UnauthenticatedError } = require('../errors')
 
-// const transactions = async (req, res) => {
-//     const id = req.params.id
-//     let limit = req.query.limit || 10
-//     limit = parseInt(limit)
-//     const transactions = await Transaction.find({
-//         $or:
-//             [
-//                 { from: id },
-//                 { to: id }
-//             ]
-//     }).select('to from amount createdAt').sort({ "createdAt": -1 }).limit(limit)
+const users = async (req, res) => {
+    let { page, limit, query } = req.query
+    let queryObject = {}
 
-//     res.status(StatusCodes.OK).json({ len: transactions.length, transactions })
+    if (!limit) {
+        limit = 10
+    }
+    else {
+        limit = parseInt(limit)
+    }
 
-// }
+    if (!page) {
+        page = 1
+    }
+    else {
+        page = parseInt(page)
+    }
+
+    if (query) {
+        if (/^[a-fA-F0-9]{24}$/.test(query)){
+            queryObject._id = query
+        }
+        else{
+            queryObject.$or = [
+    
+                { name: { $regex: query, $options: 'i' } },
+                { email: { $regex: query, $options: 'i' } }
+            ]
+        }
+    }
+
+    let all = await User.find(queryObject)
+    const users = await User.find(queryObject).select('name email _id role createdAt').sort({ "createdAt": -1 }).skip((page - 1) * limit).limit(limit)
+
+    res.status(StatusCodes.OK).json({ len: all.length, list: users })
+}
 
 const transactions = async (req, res) => {
     console.log("in all")
@@ -60,4 +81,4 @@ const makeAdmin = async (req, res) => {
     res.status(StatusCodes.OK).json({ "message": "done" })
 }
 
-module.exports = { transactions, makeAdmin }
+module.exports = { users, transactions, makeAdmin }
