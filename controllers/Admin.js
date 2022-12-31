@@ -29,7 +29,8 @@ const users = async (req, res) => {
             queryObject.$or = [
     
                 { name: { $regex: query, $options: 'i' } },
-                { email: { $regex: query, $options: 'i' } }
+                { email: { $regex: query, $options: 'i' } },
+                { role: { $regex: query, $options: 'i' } }
             ]
         }
     }
