@@ -47,7 +47,7 @@ let transfer = async (req, res) => {
 
 
     //await 
-    transactionEmail(transaction, { user1, user2 })
+    transactionEmail({ user1, user2, amount })
 
 
     res.status(StatusCodes.OK).json({ bal: newBal1 })
