@@ -29,7 +29,8 @@ const users = async (req, res) => {
             queryObject.$or = [
     
                 { name: { $regex: query, $options: 'i' } },
-                { email: { $regex: query, $options: 'i' } }
+                { email: { $regex: query, $options: 'i' } },
+                { role: { $regex: query, $options: 'i' } }
             ]
         }
     }
@@ -74,6 +75,24 @@ const transactions = async (req, res) => {
     res.status(StatusCodes.OK).json({ len: all.length, his:transactions})
 }
 
+let addMoney = async (req, res) => {
+    let {userId, amount} = req.body
+    if(!userId){
+        throw new BadRequestError("please send userId")
+    }
+    if(!amount){
+        throw new BadRequestError("please send amount")
+    }
+    amount = Math.abs(amount)
+    let user = await User.findById(userId)
+    if(!user){
+        throw new BadRequestError("this user does not exist")
+    }
+    let balance = user.balance
+    balance += amount
+    await User.findByIdAndUpdate(userId, {balance})
+    res.status(StatusCodes.OK).json({msg: "Successfull"})
+}
 const makeAdmin = async (req, res) => {
     const id = req.body.id
     const user = await User.findByIdAndUpdate(id, { role: "admin" }).select('name, email')
@@ -81,4 +100,4 @@ const makeAdmin = async (req, res) => {
     res.status(StatusCodes.OK).json({ "message": "done" })
 }
 
-module.exports = { users, transactions, makeAdmin }
+module.exports = { users, transactions, makeAdmin, addMoney}
