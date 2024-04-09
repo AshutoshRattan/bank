@@ -39,7 +39,13 @@ let UserSchema = new mongoose.Schema({
     // add transaction history here
 })
 
-UserSchema.pre('save', async function () {
+UserSchema.pre('save', async function () { // will run everytime it is changed so should i chech if password is modified
+
+    /*
+The pre('save') middleware in Mongoose will not run when you use the findByIdAndUpdate method to update a document. This middleware is specifically designed to run before the save() method is called on a Mongoose model instance.
+
+The findByIdAndUpdate method is a convenience method for updating a document by its _id field and bypasses the pre('save') middleware. If you want to run custom logic before or after an update using findByIdAndUpdate, you can do so by using Mongoose's pre and post middleware for the update method, like this:
+    */
     const salt = await bcrypt.genSalt(10)
     this.password = await bcrypt.hash(this.password, salt)
 })
